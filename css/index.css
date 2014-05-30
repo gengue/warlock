@@ -5,6 +5,9 @@ body{
     padding: 0;
     font-family: "Helvetica", "Arial";
 }
+h1, h2{
+    text-align: center;
+}
 #wrap{
      margin-top: 8%;  
 }
@@ -64,6 +67,10 @@ footer{
 }
 #contenido{			
     display: none;
+}
+#chat-form{
+    padding-right: 8px;
+    padding-left: 8px;
 }
 #contenidoChat{        
     display: inline;
