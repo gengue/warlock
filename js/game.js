@@ -17,15 +17,15 @@ var KEY_DOWN=40;
 var colors=['#0f0','#00f','#ff0','#f00'];
 
 var fondo=new Image();
-    fondo.src='targetshoot.png';
+    fondo.src='img/targetshoot.png';
 
 var imgPlayer= [];
 
 var player1 = new Image();
-player1.src = 'mage.png'; 
+player1.src = 'img/mage.png'; 
 imgPlayer.push(player1);
 var player2 = new Image();
-player2.src = 'mage2.png'; 
+player2.src = 'img/mage2.png'; 
 imgPlayer.push(player2);
 imgPlayer.push(player1);
 

@@ -14,17 +14,26 @@ server.listen(port);
 app.get('/', function(req, res) {
     res.sendfile(__dirname + '/index.html');
 });
-app.get('/game.js', function(req, res) {
-    res.sendfile(__dirname + '/game.js');
+app.get('/js/game.js', function(req, res) {
+    res.sendfile(__dirname + '/js/game.js');
 });
-app.get('/targetshoot.png', function(req, res) {
-    res.sendfile(__dirname + '/targetshoot.png');
+app.get('/js/forms.js', function(req, res) {
+    res.sendfile(__dirname + '/js/forms.js');
 });
-app.get('/mage.png', function(req, res) {
-    res.sendfile(__dirname + '/mage.png');
+app.get('/css/index.css', function(req, res) {
+    res.sendfile(__dirname + '/css/index.css');
 });
-app.get('/mage2.png', function(req, res) {
-    res.sendfile(__dirname + '/mage2.png');
+app.get('/img/targetshoot.png', function(req, res) {
+    res.sendfile(__dirname + '/img/targetshoot.png');
+});
+app.get('/img/mage.png', function(req, res) {
+    res.sendfile(__dirname + '/img/mage.png');
+});
+app.get('/img/mage2.png', function(req, res) {
+    res.sendfile(__dirname + '/img/mage2.png');
+});
+app.get('/img/logo3bolas.png', function(req, res) {
+    res.sendfile(__dirname + '/img/logo3bolas.png');
 });
 
 io.sockets.on('connection', function(socket) {
