@@ -1,0 +1,122 @@
+<html>
+<head>
+	<title>Warlock</title></head>
+	<style type="text/css">
+		#chat{
+			height: 500px;
+		}
+		#contenido{			
+			display: none;
+		}
+		#contenidoChat{
+		    display: inline;
+			float: left;
+			border: 1px #000 solid;
+			margin: 10px;
+		}
+		#ContenidoJuego{
+		    display: inline-block;
+		}
+		.scrolleable {
+		    overflow-y: scroll;
+		}
+
+	</style>
+<body>
+	<h1>Warlock</h1>
+
+	<div id="nick">
+		<p>Ingrese un nombre de usuario:</p>
+		<p id="nickError"></p>
+		<form id="nick-form">
+			<input size="20" id="nickname"></input>
+			<input type="submit"></input>		
+		</form>
+	</div>
+	<div id="contenido">
+	
+                <div id="Contenidojuego">
+                        <canvas id="canvas" height="500" width="800"> Tu navegador es obsoleto  </canvas>
+                </div>
+		<div id="contenidoChat">
+		        <form id="chat-form">
+					<input size="35" id="mensaje"></input>
+					<input type="submit"></input>		
+				</form>
+			<div id="chat" class="scrolleable">				
+				
+			</div>			
+		</div>
+		<div id="usuarios"></div>
+	</div>
+
+	<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script type="text/javascript" src="game.js"></script>
+
+	<script>
+	var socket = io.connect();
+	
+
+	jQuery(function($){
+		
+		var $nickFomulario = $('#nick-form');
+		var $nickError = $('#nickError');
+		var $nickCaja = $('#nickname');
+		var $usuarios = $('#usuarios');
+		var $chatFormulario = $('#chat-form');
+		var $mensajeCaja = $('#mensaje');
+		var chat = $('#chat');
+
+		$nickFomulario.submit(function(e1){
+			myName = document.getElementById('nickname').value;
+			e1.preventDefault();
+			socket.emit('nuevo usuario', $nickCaja.val(), function(data){
+				if(data != false){
+					$('#nick').hide();
+					$('#contenido').show();
+					$('#nickError').html('ok');
+
+					init();			
+				}else{
+					$('#nickError').html('El nombre de usuario ya esta en uso');
+				}
+			});
+			$nickCaja.val('');
+		});
+
+
+		socket.on('usuarios', function(data){
+			var html = '';
+			
+			for(i=0;i<data.length;i++){
+				html += data[i].nombre + '<br/>';
+			}
+			players = data;
+			//alert('actualiza');
+			$usuarios.html(html);
+		});
+
+		$chatFormulario.submit(function(e){
+			e.preventDefault();
+			if($mensajeCaja.val() != ''){
+				socket.emit('enviar mensaje', $mensajeCaja.val());	
+			}else{
+				return false;
+			}			
+			$mensajeCaja.val('');
+		});
+
+
+		socket.on('nuevo mensaje', function(data){
+		//prepend() para ponerlo al principio
+			chat.append('<b>'+data.nick+':</b>'+data.msg+'<br/>');
+			chat.scrollTop(1000);
+		});
+
+
+	});
+	</script>
+	<footer>The3Ballsoft company</footer>
+</body>
+</html>
