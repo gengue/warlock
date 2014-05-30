@@ -4,7 +4,6 @@ var canvas=null,ctx=null;
 var x=50,y=50;
 var lastPress=null;
 var pause=false;
-var dir=0;
 var myName = null;
 
 var players = [];
@@ -28,15 +27,17 @@ imgPlayer.push(player1);
 var player2 = new Image();
 player2.src = 'mage2.png'; 
 imgPlayer.push(player2);
-
 imgPlayer.push(player1);
 
 var lastUpdate=0,FPS=0,frames=0,acumDelta=0;
+
+var mousex=0, mousey=0, enPosicionDeseada=false;
 
 function init(){
     canvas= document.getElementById('canvas');
     ctx=canvas.getContext('2d');
     run();
+    iniciarEscuchas();
 }
 
 function run(){
@@ -58,48 +59,38 @@ function run(){
     mapa = new circle();
 
     paint();
+    if(!enPosicionDeseada){
+        act();
+    }    
 }
-function act(lastPress){
-    if(!pause){
-        var valido = true;
-        var dir = 0;
-        // Change Direction
-        switch(lastPress){
-            case KEY_UP:
-                dir = 1;
-            break;
-            case KEY_DOWN:
-                dir = 2;
-            break;
-            case KEY_LEFT:
-                dir = 3;
-            break;
-            case KEY_RIGHT:
-                dir = 4;
-            break;
+function act(){
+        x=mousex;
+        y=mousey;
 
-            default:
-                valido = false;
-
+        if(x<0)
+            x=0;
+        if(x>canvas.width)
+            x=canvas.width;
+        if(y<0)
+            y=0;
+        if(y>canvas.height)
+            y=canvas.height;
+                  
+    socket.emit('cambio de coordenada', {nombre: myName, dirx: x, diry: y}, function(data, pos){
+        if(data != false){  
+            players = data;
+            if(pos){
+                enPosicionDeseada=true;
+            }
+        }else{
+            alert('se devolvio falso');
         }
-        if(valido){
-            //alert('envio de coordenada');
-            socket.emit('cambio de coordenada', {nombre: myName, direction: dir}, function(data){
-                if(data != false){  
-                    players = data;    
-                }else{
-                    alert('se devolvio falso');
-                }
-            });
-        }
-    }
+    });
+        
+ }
     // Pause/Unpause
-    
-    if(lastPress==KEY_ENTER){
-        pause=!pause;
-        lastPress=null;
-    }
-}
+   
+
 
 function paint(){
     //alert('pinatndo');
@@ -117,41 +108,51 @@ function paint(){
         //players[i].fill(ctx);
         ctx.fillStyle='#fff';
         ctx.fillText(players[i].nombre+'',players[i].x,players[i].y-2);
-    }
-    if(pause){
-        ctx.fillText('PAUSE',canvas.width/2,canvas.height/2);
-    }
+    }    
     ctx.fillStyle='#fff';
     ctx.fillText('FPS: '+FPS,10,10);
 }
 
-document.addEventListener('keydown',function(evt){
-    lastPress=evt.keyCode;
-    act(evt.keyCode);
-},false);
-window.requestAnimationFrame=(function(){
-    return window.requestAnimationFrame || 
-    window.webkitRequestAnimationFrame || 
-    window.mozRequestAnimationFrame || 
-    function(callback){window.setTimeout(callback,17);};
-})();
+    function iniciarEscuchas()
+    {
+        document.addEventListener('click',function(evt){
+            mousex=evt.pageX-canvas.offsetLeft;
+            mousey=evt.pageY-canvas.offsetTop;
+            enPosicionDeseada = false;
+            act();
+        },false);
+
+        document.addEventListener('keydown',function(evt){
+            lastPress=evt.keyCode;
+            act(evt.keyCode);
+        },false);
+        window.requestAnimationFrame=(function(){
+            return window.requestAnimationFrame || 
+            window.webkitRequestAnimationFrame || 
+            window.mozRequestAnimationFrame || 
+            function(callback){
+                window.setTimeout(callback,17);
+            };
+    })();
+}
 
 function circle(){
         this.x=50;
         this.y=50;
         this.radius=20;
-    }
+    
         
-    circle.prototype.stroke=function(ctx){
+    this.stroke=function(ctx){
         ctx.beginPath();
         ctx.arc(this.x,this.y,this.radius,0,Math.PI*2,true);
         ctx.stroke();
     }
 
-    circle.prototype.drawImageArea=function(ctx,img,sx,sy,sw,sh){
+    this.drawImageArea=function(ctx,img,sx,sy,sw,sh){
         if(img.width)
             //ctx.drawImage(img,sx,sy,sw,sh,this.x-this.radius,this.y-this.radius,this.radius*2,this.radius*2);
             ctx.drawImage(img, 0, 0);
         else
             this.stroke(ctx);
     }
+}
