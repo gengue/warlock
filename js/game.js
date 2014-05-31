@@ -6,6 +6,11 @@ var lastPress = null;
 var pause = false;
 var myName = null;
 
+var x_old = 0;
+var y_old = 0;
+var dir = 0;
+var cambio = false;
+
 var players = [];
 
 var KEY_ENTER = 13;
@@ -28,7 +33,8 @@ player2.src = 'img/player2.png';
 imgPlayer.push(player2);
 imgPlayer.push(player1);
 
-var lapida = new Image(); lapida.src = 'img/lapida.png';
+var lapida = new Image();
+lapida.src = 'img/lapida.png';
 
 
 var lastUpdate = 0, FPS = 0, frames = 0, acumDelta = 0;
@@ -38,9 +44,9 @@ var mousex = 0, mousey = 0, enPosicionDeseada = true;
 function init() {
     canvas = document.getElementById('canvas');
     ctx = canvas.getContext('2d');
-    run();    
+    run();
     iniciarEscuchas();
-    mapaPixel = ctx.getImageData(0,0,canvas.width,canvas.height);    
+    mapaPixel = ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
 function run() {
@@ -65,37 +71,16 @@ function run() {
         act();
     }
 }
+
 function act() {
     x = mousex;
     y = mousey;
-    var indiceJugador;
-    
-    if (x < 0)
-        x = 0;
-    if (x > canvas.width)
-        x = canvas.width;
-    if (y < 0)
-        y = 0;
-    if (y > canvas.height)
-        y = canvas.height;
 
-     for (var i = 0; i < players.length; i++) {
-         if(myName === players[i].nombre){
-             indiceJugador = i;
-             break;
-         }
-     }
-    var IndicePixel =  4 * ((players[i].x - 20) + (players[i].y + 60) * canvas.width); 
-    
-    if (    mapaPixel.data[IndicePixel] === 63 && 
-            mapaPixel.data[IndicePixel +1] === 0  &&
-            mapaPixel.data[IndicePixel +2] === 0 && 
-            players[indiceJugador].vida === true) {
-                
-            socket.emit('lo pelaron', {index: indiceJugador});    
-    }
-    if(players[indiceJugador].vida) {
-        socket.emit('cambio de coordenada', {nombre: myName, dirx: x - 30, diry: y - 60}, function(data, pos) {
+    var indiceJugador = checkLife();
+
+    if (players[indiceJugador].vida) {
+        detOrientation();
+        socket.emit('cambio de coordenada', {nombre: myName, dirx: x - 30, diry: y - 60, orientacion: dir}, function(data, pos) {
             if (data !== false) {
                 players = data;
                 if (pos) {
@@ -107,6 +92,80 @@ function act() {
         });
     }
 }
+function checkLimits() {
+
+    if (x < 0)
+        x = 0;
+    if (x > canvas.width)
+        x = canvas.width;
+    if (y < 0)
+        y = 0;
+    if (y > canvas.height)
+        y = canvas.height;
+}
+function checkLife() {
+    checkLimits();
+
+    var indiceJugador;
+
+    for (var i = 0; i < players.length; i++) {
+        if (myName === players[i].nombre) {
+            indiceJugador = i;
+            break;
+        }
+    }
+
+    var IndicePixel = 4 * ((players[i].x - 20) + (players[i].y + 60) * canvas.width);
+
+    if (mapaPixel.data[IndicePixel] === 63 &&
+            mapaPixel.data[IndicePixel + 1] === 0 &&
+            mapaPixel.data[IndicePixel + 2] === 0 &&
+            players[indiceJugador].vida === true) {
+
+        socket.emit('lo pelaron', {index: indiceJugador});
+    }
+    return indiceJugador;
+}
+function detOrientation() {
+    if (cambio) {
+        //console.log(x_old + "," + y_old + " Vs " + x + "," + y);
+        x = mousex;
+        y = mousey;
+        var ran = 45;
+        if (x > x_old) {
+            if (y > y_old - ran && y < y_old + ran) {
+                //dir = 1; //abajo diagonal derecha
+                dir = 3;
+            } else if (y < y_old) {
+                //dir = 2; //arriba diagonal derecha
+                dir = 9;
+            } else if (y > y_old) {
+                dir = 8; // derecha
+            }
+        } else if (x < x_old) {
+            if (y > y_old - ran && y < y_old + ran) {
+                //dir = 1; //abajo diagonal derecha
+                dir = 6;
+            } else if (y < y_old) {
+                //dir = 2; //arriba diagonal derecha
+                dir = 9;
+            } else if (y > y_old) {
+                dir = 8; // derecha
+            }
+        } else {
+            if (y > y_old) {
+                dir = 8; //abajo
+            } else {
+                dir = 9;//arriba
+            }
+        }
+
+        x_old = x;
+        y_old = y;
+
+        cambio = false;
+    }
+}
 
 function paint() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -114,30 +173,49 @@ function paint() {
     drawImageArea(ctx, fondo);
 
     for (var i = 0; i < players.length; i++) {
-        //ctx.fillStyle='#0f0';
-        ctx.fillStyle = colors[i % 4];
-        
-        if(players[i].vida){
-            ctx.drawImage(imgPlayer[i % 2], 128, 7, 92, 90, players[i].x, players[i].y, 60, 60);
-        }else{      
-            ctx.drawImage(lapida, 0, 0,130 ,230 , players[i].x, players[i].y, 60, 60);
-//            ctx.fillStyle = 'red';
-//            ctx.fillRect(players[i].x,  players[i].y, 30, 30);            
+        if (players[i].vida) {
+            drawPlayer(players[i]);
         }
-        
+        else {
+            ctx.drawImage(lapida, 0, 0, 130, 230, players[i].x, players[i].y, 60, 60);
+        }
         ctx.fillStyle = '#fff';
-        ctx.fillText(players[i].nombre + '', players[i].x, players[i].y - 2);
+        ctx.fillText(players[i].nombre + '', players[i].x + 2, players[i].y - 2);
     }
     ctx.fillStyle = '#fff';
     ctx.fillText('FPS: ' + FPS, 10, 10);
 }
 
+function drawPlayer(player) {
+    switch (player.orientacion) {
+        case 9: //Arriba
+            //console.log("arriba");
+            ctx.drawImage(imgPlayer[i % 2], 13, 7, 92, 90, player.x, player.y, 60, 60);
+            break;
+        case 8: //Abajo
+            ctx.drawImage(imgPlayer[i % 2], 251, 7, 92, 90, player.x, player.y, 60, 60);
+            //console.log("Abajo");
+            break;
+        case 6: //Izquierda
+            ctx.drawImage(imgPlayer[i % 2], 368, 7, 92, 90, player.x, player.y, 60, 60);
+            //console.log("Izquierda");
+            break;
+        case 3:  //Derecha
+            ctx.drawImage(imgPlayer[i % 2], 128, 7, 92, 90, player.x, player.y, 60, 60);
+            //console.log("Derecha");
+            break;
+        default:
+            //console.log("default");
+            ctx.drawImage(imgPlayer[i % 2], 251, 7, 92, 90, player.x, player.y, 60, 60);
+    }
+}
 function iniciarEscuchas()
 {
     document.addEventListener('click', function(evt) {
         mousex = evt.pageX - canvas.offsetLeft;
         mousey = evt.pageY - canvas.offsetTop;
         enPosicionDeseada = false;
+        cambio = true;
         act();
     }, false);
 

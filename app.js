@@ -67,7 +67,7 @@ io.sockets.on('connection', function(socket) {
 
                 encontrado = true;
                 rango = 2;
-                if (jugadores[i].x === data.dirx) {
+                if (jugadores[i].x === data.dirx || jugadores[i].x === data.dirx + 1 || jugadores[i].x === data.dirx - 1) {
                     destx = true;
                 }
                 else {
@@ -78,7 +78,7 @@ io.sockets.on('connection', function(socket) {
                         jugadores[i].x += rango;
                     }
                 }
-                if (jugadores[i].y === data.diry) {
+                if (jugadores[i].y === data.diry || jugadores[i].y === data.diry + 1 || jugadores[i].y === data.diry - 1) {
                     desty = true;
                 } else {
                     if (jugadores[i].y > data.diry) {
@@ -88,6 +88,7 @@ io.sockets.on('connection', function(socket) {
                         jugadores[i].y += rango;
                     }
                 }
+                jugadores[i].orientacion = data.orientacion;
             }
 
         }
@@ -104,8 +105,8 @@ io.sockets.on('connection', function(socket) {
     function actualizarJugadores() {
         io.sockets.volatile.emit('usuarios', jugadores);
     }
-    
-    socket.on('lo pelaron', function(data){
+
+    socket.on('lo pelaron', function(data) {
         jugadores[data.index].vida = false;
         actualizarJugadores();
     });
@@ -122,13 +123,13 @@ io.sockets.on('connection', function(socket) {
 
         for (var i = 0; i < jugadores.length; i++) {
 
-            if (jugadores[i].nombre === socket.nickname){
-               jugadores.splice(i, 1);
-               actualizarJugadores();
+            if (jugadores[i].nombre === socket.nickname) {
+                jugadores.splice(i, 1);
+                actualizarJugadores();
             }
         }
 
-            
+
     });
 
 });
@@ -137,6 +138,7 @@ io.sockets.on('connection', function(socket) {
 function Rectangle(name) {
     this.vida = true;
     this.nombre = name;
+    this.orientacion = 0;
     this.x = ~~(Math.floor(Math.random() * 740));
     this.y = ~~(Math.floor(Math.random() * 500));
 
