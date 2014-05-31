@@ -39,6 +39,10 @@ var socket = io.connect();
 			//alert('actualiza');
 			usuarios.html(html);
 		});
+                
+                socket.on('balas', function(data){
+			balas = data;
+		});
 
 		chatFormulario.submit(function(e){
 			e.preventDefault();

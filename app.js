@@ -4,6 +4,7 @@ var express = require('express'),
         server = require('http').createServer(app),
         io = require('socket.io').listen(server),
         jugadores = [];
+balas = [];
 
 var port = Number(process.env.PORT || 5000);
 
@@ -38,6 +39,12 @@ app.get('/img/lapida.png', function(req, res) {
 app.get('/img/logo3bolas.png', function(req, res) {
     res.sendfile(__dirname + '/img/logo3bolas.png');
 });
+app.get('/img/targetshoot.png', function(req, res) {
+    res.sendfile(__dirname + '/img/targetshoot.png');
+});
+app.get('/img/bala.png', function(req, res) {
+    res.sendfile(__dirname + '/img/bala.png');
+});
 
 io.sockets.on('connection', function(socket) {
     //**FUNCION PARA NUEVO USUARIO**///
@@ -54,7 +61,9 @@ io.sockets.on('connection', function(socket) {
             callback(true);
             socket.nickname = data;
             jugadores.push(new Rectangle(socket.nickname));
+            balas.push(new bala(0, 0));
             actualizarJugadores();
+            actualizarBalas();
         }
     });
     //**FUNCION PARA CAMBIO DE COORDENADAS JUGADOR**///
@@ -101,7 +110,46 @@ io.sockets.on('connection', function(socket) {
         }
     });
 
+    socket.on('disparo', function(data, callback) {
+        var destx = false, desty = false;
+        balas[data.index].x = data.xActual;
+        balas[data.index].y = data.yActual;
+        balas[data.index].activo = true;
+        
+        rango = 4;
+        if (balas[data.index].x >= data.dirx - 3 && balas[data.index].x <= data.dirx + 3 ) {
+            destx = true;
+        }
+        else {
+            if (balas[data.index].x > data.dirx) {
+                balas[data.index].x -= rango;
+            }
+            if (balas[data.index].x < data.dirx) {
+                balas[data.index].x += rango;
+            }
+        }
+        if (balas[data.index].y >= data.diry - 3 && balas[data.index].y <= data.diry + 3 ) {
+            desty = true;
+        } else {
+            if (balas[data.index].y > data.diry) {
+                balas[data.index].y -= rango;
+            }
+            if (balas[data.index].y < data.diry) {
+                balas[data.index].y += rango;
+            }
+        }
+        if (destx && desty){
+            callback(true);
+            balas[data.index].activo = false;
+        }
+            
+        
+        actualizarBalas();
 
+    });
+    function actualizarBalas(){
+        io.sockets.volatile.emit('balas', balas);
+    }
     function actualizarJugadores() {
         io.sockets.volatile.emit('usuarios', jugadores);
     }
@@ -139,8 +187,13 @@ function Rectangle(name) {
     this.vida = true;
     this.nombre = name;
     this.orientacion = 0;
-    
-    this.x = ~~(Math.floor(Math.random() * (520 - 200 + 1)) + 100);
-    this.y = ~~(Math.floor(Math.random() * (370 - 180 + 1)) + 180);    
+    this.x = ~~(Math.floor(Math.random() * 740));
+    this.y = ~~(Math.floor(Math.random() * 500));
+
+}
+function bala(x, y) {
+    this.x = x;
+    this.y = y;
+    this.activo = false;
 
 }

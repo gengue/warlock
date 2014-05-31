@@ -12,6 +12,7 @@ var dir = 0;
 var cambio = false;
 
 var players = [];
+var balas = [];
 
 var KEY_ENTER = 13;
 var KEY_LEFT = 37;
@@ -19,6 +20,14 @@ var KEY_UP = 38;
 var KEY_RIGHT = 39;
 var KEY_DOWN = 40;
 var colors = ['#0f0', '#00f', '#ff0', '#f00'];
+
+var ESPACE = 32;
+var presionando = false;
+var Mmousex = 0;
+var Mmousey = 0;
+var disparo = false;
+var xbala = 0;
+var ybala = 0;
 
 var imgPlayer = [];
 
@@ -35,6 +44,12 @@ imgPlayer.push(player1);
 
 var lapida = new Image();
 lapida.src = 'img/lapida.png';
+
+var apuntador = new Image();
+apuntador.src = 'img/targetshoot.png';
+
+var bala = new Image();
+bala.src = 'img/bala.png';
 
 
 var lastUpdate = 0, FPS = 0, frames = 0, acumDelta = 0;
@@ -70,11 +85,16 @@ function run() {
     if (!enPosicionDeseada) {
         act();
     }
+    if (disparo) {
+        actbala();
+    }
 }
 
 function act() {
-    x = mousex;
-    y = mousey;
+    if (!presionando) {
+        x = mousex;
+        y = mousey;
+    }
 
     var indiceJugador = checkLife();
 
@@ -92,6 +112,40 @@ function act() {
         });
     }
 }
+
+function actbala() {
+    console.log("disparanod...");
+    
+    var myIndex = getIndexPlayer();
+    if (presionando && !balas[myIndex].activo) {
+        xbala = mousex;
+        ybala = mousey;
+    }
+    
+    if (disparo) {
+        if (balas != null) {
+            if (!balas[myIndex].activo) {
+                socket.emit('disparo', {index: myIndex, xActual: players[myIndex].x, yActual: players[myIndex].y, dirx: Mmousex, diry: Mmousey}, function(pos) {
+                    if (data !== false) {
+                        balas = data;
+                        if (pos) {
+                            disparo = false;
+                        }
+                    } else {
+                        alert('se devolvio falso');
+                    }
+                });
+            } else {
+                socket.emit('disparo', {index: myIndex, xActual: balas[myIndex].x, yActual: balas[myIndex].y, dirx: xbala, diry: ybala}, function(pos) {
+                    if (pos) {
+                        disparo = false;
+                    }
+                });
+            }
+        }
+    }
+}
+
 function checkLimits() {
 
     if (x < 0)
@@ -103,19 +157,19 @@ function checkLimits() {
     if (y > canvas.height)
         y = canvas.height;
 }
+function getIndexPlayer() {
+    for (var i = 0; i < players.length; i++) {
+        if (myName === players[i].nombre) {
+            return i;
+        } 
+    }
+}
 function checkLife() {
     checkLimits();
 
-    var indiceJugador;
+    var indiceJugador = getIndexPlayer();
 
-    for (var i = 0; i < players.length; i++) {
-        if (myName === players[i].nombre) {
-            indiceJugador = i;
-            break;
-        }
-    }
-
-    var IndicePixel = 4 * ((players[i].x - 20) + (players[i].y + 60) * canvas.width);
+    var IndicePixel = 4 * ((players[indiceJugador].x - 20) + (players[indiceJugador].y + 60) * canvas.width);
 
     if (mapaPixel.data[IndicePixel] === 63 &&
             mapaPixel.data[IndicePixel + 1] === 0 &&
@@ -166,12 +220,13 @@ function detOrientation() {
         cambio = false;
     }
 }
-
 function paint() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     drawImageArea(ctx, fondo);
-
+    if (presionando) {
+        ctx.drawImage(apuntador, 0, 0, 20, 20, Mmousex - 10, Mmousey - 10, 20, 20);
+    }
     for (var i = 0; i < players.length; i++) {
         if (players[i].vida) {
             drawPlayer(players[i], i);
@@ -182,6 +237,14 @@ function paint() {
         ctx.fillStyle = '#fff';
         ctx.fillText(players[i].nombre + '', players[i].x + 2, players[i].y - 2);
     }
+    if (balas != null) {
+        for (var i = 0; i < balas.length; i++) {
+            if (balas[i].activo) {
+                ctx.drawImage(bala, 0, 0, 19, 38, balas[i].x, balas[i].y, 60, 60);
+            }
+        }
+    }
+
     ctx.fillStyle = '#fff';
     ctx.fillText('FPS: ' + FPS, 10, 10);
 }
@@ -211,17 +274,38 @@ function drawPlayer(player, i) {
 }
 function iniciarEscuchas()
 {
-    document.addEventListener('click', function(evt) {
+    canvas.addEventListener('click', function(evt) {
         mousex = evt.pageX - canvas.offsetLeft;
         mousey = evt.pageY - canvas.offsetTop;
-        enPosicionDeseada = false;
-        cambio = true;
-        act();
+        if (!presionando) {
+            enPosicionDeseada = false;
+            cambio = true;
+            act();
+        } else {
+            if (!disparo) {
+                disparo = true;
+                actbala();
+            }
+        }
     }, false);
 
     document.addEventListener('keydown', function(evt) {
         lastPress = evt.keyCode;
-        act(evt.keyCode);
+        if (lastPress === ESPACE) {
+            presionando = true;
+            document.addEventListener('mousemove', function(evt) {
+                Mmousex = evt.pageX - canvas.offsetLeft;
+                Mmousey = evt.pageY - canvas.offsetTop;
+            }, false);
+        }
+    }, false);
+    document.addEventListener('keyup', function(evt) {
+        lastPress = evt.keyCode;
+        if (lastPress === ESPACE) {
+            presionando = false;
+            document.removeEventListener('mousemove', function(evt) {
+            }, false);
+        }
     }, false);
     window.requestAnimationFrame = (function() {
         return window.requestAnimationFrame ||
