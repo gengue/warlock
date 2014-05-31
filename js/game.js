@@ -7,7 +7,6 @@ var pause=false;
 var myName = null;
 
 var players = [];
-var mapa = null;
 
 var KEY_ENTER=13;
 var KEY_LEFT=37;
@@ -17,21 +16,21 @@ var KEY_DOWN=40;
 var colors=['#0f0','#00f','#ff0','#f00'];
 
 var fondo=new Image();
-    fondo.src='img/targetshoot.png';
+fondo.src='img/targetshoot.png';
 
 var imgPlayer= [];
 
 var player1 = new Image();
-player1.src = 'img/mage.png'; 
+player1.src = 'img/player1.png'; 
 imgPlayer.push(player1);
 var player2 = new Image();
-player2.src = 'img/mage2.png'; 
+player2.src = 'img/player2.png'; 
 imgPlayer.push(player2);
 imgPlayer.push(player1);
 
 var lastUpdate=0,FPS=0,frames=0,acumDelta=0;
 
-var mousex=0, mousey=0, enPosicionDeseada=false;
+var mousex=0, mousey=0, enPosicionDeseada=true;
 
 function init(){
     canvas= document.getElementById('canvas');
@@ -56,8 +55,6 @@ function run(){
         acumDelta-=1;
     }
 
-    mapa = new circle();
-
     paint();
     if(!enPosicionDeseada){
         act();
@@ -76,8 +73,8 @@ function act(){
         if(y>canvas.height)
             y=canvas.height;
                   
-    socket.emit('cambio de coordenada', {nombre: myName, dirx: x, diry: y}, function(data, pos){
-        if(data != false){  
+    socket.emit('cambio de coordenada', {nombre: myName, dirx: x-30, diry: y-60}, function(data, pos){
+        if(data !== false){  
             players = data;
             if(pos){
                 enPosicionDeseada=true;
@@ -88,8 +85,8 @@ function act(){
     });
         
  }
-    // Pause/Unpause
    
+  
 
 
 function paint(){
@@ -97,15 +94,15 @@ function paint(){
     //ctx.fillStyle='#000';
     ctx.fillRect(0,0,canvas.width,canvas.height);
     
-    mapa.drawImageArea(ctx,fondo);
+    drawImageArea(ctx,fondo);
 
 
     for(var i=0;i<players.length;i++){
         //ctx.fillStyle='#0f0';
         ctx.fillStyle=colors[i%4];
         //ctx.fillRect(players[i].x,players[i].y,players[i].width,players[i].height);
-        ctx.drawImage(imgPlayer[i%2],185,110,92,86, players[i].x, players[i].y,60,60);
-        //players[i].fill(ctx);
+        ctx.drawImage(imgPlayer[i%2],128,7,92,90, players[i].x, players[i].y,60,60);
+        //players[i].fill(ctx);        
         ctx.fillStyle='#fff';
         ctx.fillText(players[i].nombre+'',players[i].x,players[i].y-2);
     }    
@@ -136,18 +133,18 @@ function paint(){
     })();
 }
 
-function circle(){
-        this.x=50;
-        this.y=50;
-        this.radius=20;
-    
-        
-    this.stroke=function(ctx){
-        ctx.beginPath();
-        ctx.arc(this.x,this.y,this.radius,0,Math.PI*2,true);
-        ctx.stroke();
-    }
-
+//function circle(){
+//        this.x=50;
+//        this.y=50;
+//        this.radius=20;
+//    
+//        
+//    this.stroke=function(ctx){
+//        ctx.beginPath();
+//        ctx.arc(this.x,this.y,this.radius,0,Math.PI*2,true);
+//        ctx.stroke();
+//    }
+//
     this.drawImageArea=function(ctx,img,sx,sy,sw,sh){
         if(img.width)
             //ctx.drawImage(img,sx,sy,sw,sh,this.x-this.radius,this.y-this.radius,this.radius*2,this.radius*2);
@@ -155,4 +152,4 @@ function circle(){
         else
             this.stroke(ctx);
     }
-}
+//}

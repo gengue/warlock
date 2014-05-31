@@ -9,7 +9,7 @@ h1, h2{
     text-align: center;
 }
 #wrap{
-     margin-top: 8%;  
+     margin-top: 3%;  
 }
 
 #nick-form{
@@ -63,7 +63,7 @@ footer{
     border-radius: 5px;
 }
 #chat{
-    height: 450px;
+    height: 310px;
 }
 #contenido{			
     display: none;
