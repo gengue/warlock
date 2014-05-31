@@ -23,14 +23,17 @@ app.get('/js/forms.js', function(req, res) {
 app.get('/css/index.css', function(req, res) {
     res.sendfile(__dirname + '/css/index.css');
 });
-app.get('/img/targetshoot.png', function(req, res) {
-    res.sendfile(__dirname + '/img/targetshoot.png');
+app.get('/img/targetshoot2.png', function(req, res) {
+    res.sendfile(__dirname + '/img/targetshoot2.png');
 });
 app.get('/img/player1.png', function(req, res) {
     res.sendfile(__dirname + '/img/player1.png');
 });
 app.get('/img/player2.png', function(req, res) {
     res.sendfile(__dirname + '/img/player2.png');
+});
+app.get('/img/lapida.png', function(req, res) {
+    res.sendfile(__dirname + '/img/lapida.png');
 });
 app.get('/img/logo3bolas.png', function(req, res) {
     res.sendfile(__dirname + '/img/logo3bolas.png');
@@ -100,9 +103,12 @@ io.sockets.on('connection', function(socket) {
 
     function actualizarJugadores() {
         io.sockets.volatile.emit('usuarios', jugadores);
-
     }
-
+    
+    socket.on('lo pelaron', function(data){
+        jugadores[data.index].vida = false;
+        actualizarJugadores();
+    });
 
     //**FUNCION PARA ENVIAR UN MENSAJE**///
     socket.on('enviar mensaje', function(data) {
@@ -129,9 +135,9 @@ io.sockets.on('connection', function(socket) {
 
 
 function Rectangle(name) {
-
+    this.vida = true;
     this.nombre = name;
-    this.x = ~~(Math.floor(Math.random() * 800));
+    this.x = ~~(Math.floor(Math.random() * 740));
     this.y = ~~(Math.floor(Math.random() * 500));
 
 }
