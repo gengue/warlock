@@ -174,7 +174,7 @@ function paint() {
 
     for (var i = 0; i < players.length; i++) {
         if (players[i].vida) {
-            drawPlayer(players[i]);
+            drawPlayer(players[i], i);
         }
         else {
             ctx.drawImage(lapida, 0, 0, 130, 230, players[i].x, players[i].y, 60, 60);
@@ -186,7 +186,7 @@ function paint() {
     ctx.fillText('FPS: ' + FPS, 10, 10);
 }
 
-function drawPlayer(player) {
+function drawPlayer(player, i) {
     switch (player.orientacion) {
         case 9: //Arriba
             //console.log("arriba");

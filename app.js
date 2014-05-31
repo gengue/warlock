@@ -139,7 +139,8 @@ function Rectangle(name) {
     this.vida = true;
     this.nombre = name;
     this.orientacion = 0;
-    this.x = ~~(Math.floor(Math.random() * 740));
-    this.y = ~~(Math.floor(Math.random() * 500));
+    
+    this.x = ~~(Math.floor(Math.random() * (520 - 200 + 1)) + 100);
+    this.y = ~~(Math.floor(Math.random() * (370 - 180 + 1)) + 180);    
 
 }
